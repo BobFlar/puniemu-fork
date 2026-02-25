@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Puniemu.Src.Server.GameServer.Requests.FriendSearch.DataClasses;
 using Puniemu.Src.Server.GameServer.DataClasses;
 using System.Buffers;
@@ -24,7 +24,11 @@ namespace Puniemu.Src.Server.GameServer.Requests.FriendSearch.Logic
             var res = new FriendSearchResponse();
 
             string targetGdkey = await UserDataManager.Logic.UserDataManager.GetGdkeyFromCharacterId(deserialized!.TargetCharacterID)!;
-
+            
+            string LastPlayDate = await UserDataManager.Logic.UserDataManager.GetLastLoginTime(targetGdkey);
+            
+            string LastPlayDateSentence = GameServer.Logic.GenerateFriendData.GetTimeDifferenceString(LastPlayDate);
+            
             res.Friend = null;
             res.ResponseCode = 1;
             if (!targetGdkey.IsNullOrEmpty())
@@ -35,10 +39,10 @@ namespace Puniemu.Src.Server.GameServer.Requests.FriendSearch.Logic
                     res.ResponseCode = 0;
                     res.Friend = new();
                     res.Friend.PlayerName = targetUserData.PlayerName;
-                    res.Friend.LastPlayDt = await UserDataManager.Logic.UserDataManager.GetLastLoginTime(targetGdkey);
+                    res.Friend.LastPlayDt = LastPlayDate;
                     res.Friend.IconId = targetUserData.IconID;
                     res.Friend.YoukaiId = targetUserData.YoukaiId;
-                    res.Friend.LastPlayDtSentence = "🥺​"; 
+                    res.Friend.LastPlayDtSentence = LastPlayDateSentence;
                     res.Friend.TitleId = targetUserData.CharacterTitleID;
                     res.Friend.CharacterId = targetUserData.CharacterID;
                     res.Friend.UserId = targetUserData.UserID;
@@ -50,3 +54,4 @@ namespace Puniemu.Src.Server.GameServer.Requests.FriendSearch.Logic
         }
     }
 }
+
