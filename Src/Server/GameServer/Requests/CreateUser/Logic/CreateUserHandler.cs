@@ -32,29 +32,30 @@ namespace Puniemu.Src.Server.GameServer.Requests.CreateUser.Logic
             {
                 await RegisterDefaultTables(deserialized, generatedUserData);
             }
-            catch
+            catch (Exception e)
             {
                 ctx.Response.StatusCode = 500;
-                await ctx.Response.WriteAsync("Internal server error");
+                await ctx.Response.WriteAsync($"Error: {e.Message}"); 
                 return;
             }
             var createUserResponse = new CreateUserResponse(DataManager.Logic.DataManager.GameDataManager.GamedataCache["ywp_user_tutorial_list_def"], generatedUserData);
             var marshalledResponse = JsonConvert.SerializeObject(createUserResponse);
             var encryptedResponse = NHNCrypt.Logic.NHNCrypt.EncryptResponse(marshalledResponse);
-            await ctx.Response.WriteAsync(encryptedResponse);            
+            await ctx.Response.WriteAsync(encryptedResponse);
             
         }
 
-        private static async Task RegisterDefaultTables(CreateUserRequest deserialized,YwpUserData generatedUserData)
+        private static async Task RegisterDefaultTables(CreateUserRequest deserialized, YwpUserData generatedUserData)
         {
-            Dictionary<string,object?> tables = new Dictionary<string,object?>();
+            Dictionary<string, object?> tables = new Dictionary<string, object?>();
+            
             tables["opening_tutorial_flg"] = false;
-            foreach(var userTable in Consts.LOGIN_TABLES.Where(x => x.Contains("ywp_user") && x != "ywp_user_data"))
+        
+            foreach (var userTable in Consts.LOGIN_TABLES.Where(x => x.Contains("ywp_user") && x != "ywp_user_data"))
             {
-                //initialize with default if exists, else 
-                if (DataManager.Logic.DataManager.GameDataManager!.GamedataCache.TryGetValue(userTable+"_def", out var data))
+                if (DataManager.Logic.DataManager.GameDataManager!.GamedataCache.TryGetValue(userTable + "_def", out var data))
                 {
-                    object? deserializedDefaultUserTable = null!;
+                    object? deserializedDefaultUserTable = null;
                     try
                     {
                         deserializedDefaultUserTable = JsonConvert.DeserializeObject<object>(data);
@@ -63,26 +64,33 @@ namespace Puniemu.Src.Server.GameServer.Requests.CreateUser.Logic
                     {
                         deserializedDefaultUserTable = data;
                     }
-
-                    tables.Add(userTable, deserializedDefaultUserTable!);
+        
+                    // Utilisation de l'indexeur au lieu de .Add()
+                    tables[userTable] = deserializedDefaultUserTable;
                 }
                 else
                 {
-                    throw new Exception();
+                    // Message d'erreur explicite pour le débug
+                    throw new Exception($"Missing default data for table: {userTable}_def");
                 }
             }
-            //Set ywpuser data
-            tables.Add("ywp_user_data", generatedUserData);
-            tables.Add("ywp_user_gacha_stamp", "");
+        
+            // Set ywpuser data (écrase si déjà présent dans LOGIN_TABLES)
+            tables["ywp_user_data"] = generatedUserData;
+            tables["ywp_user_gacha_stamp"] = "";
+        
             List<YokaiCollectEntry> yokaiCollect = new();
-            tables.Add("ywp_user_youkai_collect", yokaiCollect);
+            tables["ywp_user_youkai_collect"] = yokaiCollect;
+        
             List<YokaiIntroEntry> yokaiIntro = new();
-            tables.Add("ywp_user_youkai_intro", yokaiIntro);
+            tables["ywp_user_youkai_intro"] = yokaiIntro;
+        
             List<object> empty = new();
-            tables.Add("ywp_user_goku_youkai_intro_release", empty);
-            tables.Add("ywp_user_goku_story", empty);
-            tables.Add("ywp_user_friend_request_recv", empty);
-            tables.Add("ywp_user_friend", empty);
+            tables["ywp_user_goku_youkai_intro_release"] = empty;
+            tables["ywp_user_goku_story"] = empty;
+            tables["ywp_user_friend_request_recv"] = empty;
+            tables["ywp_user_friend"] = empty;
+        
             var val = new FriendRankEntry
             {
                 IconId = generatedUserData.IconID,
@@ -99,19 +107,21 @@ namespace Puniemu.Src.Server.GameServer.Requests.CreateUser.Logic
                 Rank = 1,
                 Self = 1,
             };
-            tables.Add("ywp_user_present_box_list", empty);
-            tables.Add("ywp_user_score_attack_reward", empty);
-            tables.Add("ywp_user_league_rank", null);
-            List<FriendRankEntry> val2 = new();
-            val2.Add(val);
-            tables.Add("ywp_user_friend_star_rank", val2);
-            tables.Add("ywp_user_friend_rank", val2);
-            tables.Add("ywp_user_friend_dictionary_rank", val2);
-            tables.Add("ywp_user_self_rank", new SelfRank(generatedUserData));
-            //Set start date
-            tables.Add("login_stamp", "0|0|0");
-            await UserDataManager.Logic.UserDataManager.SetEntireUserData(deserialized.Level5UserID,tables!);
+        
+            tables["ywp_user_present_box_list"] = empty;
+            tables["ywp_user_score_attack_reward"] = empty;
+            tables["ywp_user_league_rank"] = null;
+        
+            List<FriendRankEntry> val2 = new() { val };
+            tables["ywp_user_friend_star_rank"] = val2;
+            tables["ywp_user_friend_rank"] = val2;
+            tables["ywp_user_friend_dictionary_rank"] = val2;
+            tables["ywp_user_self_rank"] = new SelfRank(generatedUserData);
+        
+            // Set start date
+            tables["login_stamp"] = "0|0|0";
+        
+            await UserDataManager.Logic.UserDataManager.SetEntireUserData(deserialized.Level5UserID, tables!);
         }
     }
 }
-//"ywp_user_youkai_collect":[],"ywp_user_gacha_stamp":"","ywp_user_youkai_intro":[],"ywp_user_goku_youkai_intro_release":[],"ywp_user_goku_story":[],"ywp_user_friend_request_recv":[],"ywp_user_friend":[]
