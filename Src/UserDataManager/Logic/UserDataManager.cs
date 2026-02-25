@@ -19,7 +19,7 @@ namespace Puniemu.Src.UserDataManager.Logic
         public static Supabase.Client? SupabaseClient;
 
         //Check credentials and connect to the Firestore database.
-               /*
+        /*
            Run this on supabase:
            CREATE OR REPLACE FUNCTION exec_sql(query text)
            RETURNS void AS $$
@@ -195,5 +195,6 @@ namespace Puniemu.Src.UserDataManager.Logic
         }
     }
 }
+
 
 
