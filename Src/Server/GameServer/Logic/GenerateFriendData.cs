@@ -1,4 +1,4 @@
-﻿using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Puniemu.Src.Server.GameServer.DataClasses;
 using Puniemu.Src.Server.GameServer.Requests.InitGacha.DataClasses;
@@ -36,25 +36,28 @@ namespace Puniemu.Src.Server.GameServer.Logic
     }
     public class GenerateFriendData
     {
-        public static string GetTimeDifferenceString(string stringDate)
+        public static string GetTimeDifferenceString(string LastPlayDate)
         {
-            DateTime givenDate = DateTime.ParseExact(stringDate, "yyyy-MM-dd HH:mm:ss", null);
-            TimeSpan diff = DateTime.Now - givenDate;
-
-            if (diff.TotalMinutes < 60)
+            DateTime lastLogin = DateTime.Parse(LastPlayDate);
+            TimeSpan diff = DateTime.Now - lastLogin;
+            if (diff.TotalDays >= 1)
             {
-                return $"+{(int)diff.TotalMinutes} mins";
+                int days = (int)diff.TotalDays;
+                if (days > 10) 
+                {
+                    return "+10 Days";
+                }
+                return days > 1 ? $"{days} Days" : $"{days} Day";
             }
-            else if (diff.TotalHours < 24)
+            else if (diff.TotalHours >= 1)
             {
-                return $"+{(int)diff.TotalHours} hrs";
+                int hours = (int)diff.TotalHours;
+                return hours > 1 ? $"{hours} Hours" : $"{hours} Hour";
             }
             else
             {
-                int days = (int)diff.TotalDays;
-                if (days > 10)
-                    days = 10;
-                return $"+{days} days";
+                int mins = (int)diff.TotalMinutes;
+                return mins > 1 ? $"{mins} Mins" : $"{mins} Min";
             }
         }
         public static async void RefreshYwpUserFriend(string gdkey, int TitleId, int IconId, string PlayerName, long YoukaiId, string LastPlayDt)
