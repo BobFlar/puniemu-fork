@@ -83,6 +83,7 @@ namespace Puniemu.Src.Server.GameServer.Logic
                             item2.YoukaiId = YoukaiId;
                         if (!LastPlayDt.IsNullOrEmpty())
                             item2.LastPlayDt = LastPlayDt;
+                        item2.LastPlayDtSentence = GameServer.Logic.GenerateFriendData.GetTimeDifferenceString(LastPlayDt);
                     }
                 }
                 await UserDataManager.Logic.UserDataManager.SetYwpUserAsync(targetGdkey, "ywp_user_friend", friendFriendList!);
