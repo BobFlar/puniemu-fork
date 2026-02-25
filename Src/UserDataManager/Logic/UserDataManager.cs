@@ -42,11 +42,11 @@ namespace Puniemu.Src.UserDataManager.Logic
         
             string[] tablesSql = new[]
             {
-                @"CREATE TABLE IF NOT EXISTS devices (
+                @"CREATE TABLE IF NOT EXISTS device (
                     udkey   TEXT PRIMARY KEY,
                     gdkeys  JSONB NOT NULL DEFAULT '[]'
                 );",
-                @"CREATE TABLE IF NOT EXISTS accounts (
+                @"CREATE TABLE IF NOT EXISTS account (
                     gdkey                   TEXT PRIMARY KEY,
                     character_id            TEXT NOT NULL DEFAULT '',
                     user_id                 TEXT NOT NULL DEFAULT '',
@@ -195,4 +195,5 @@ namespace Puniemu.Src.UserDataManager.Logic
         }
     }
 }
+
 
