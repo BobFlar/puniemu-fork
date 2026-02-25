@@ -4,6 +4,9 @@ using Puniemu.Src.UserDataManager.DataClasses;
 using Supabase;
 using System.Collections;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Text;
+using System.Net.Http;
+
 namespace Puniemu.Src.UserDataManager.Logic
 {
     public static class UserDataManager
@@ -16,20 +19,67 @@ namespace Puniemu.Src.UserDataManager.Logic
         public static Supabase.Client? SupabaseClient;
 
         //Check credentials and connect to the Firestore database.
-        public static void Initialize()
+               /*
+           Run this on supabase:
+           CREATE OR REPLACE FUNCTION exec_sql(query text)
+           RETURNS void AS $$
+           BEGIN
+             EXECUTE query;
+           END;
+           $$ LANGUAGE plpgsql SECURITY DEFINER;
+       */
+        public static async Task Initialize()
         {
             try
             {
-                SupabaseClient = new Supabase.Client(DataManager.Logic.DataManager.SupabaseURL!, DataManager.Logic.DataManager.SupabaseKey!,
-                new SupabaseOptions
-                {
-                    AutoRefreshToken = true,
-                });
+                SupabaseClient = new Supabase.Client(DataManager.Logic.DataManager.SupabaseURL!, DataManager.Logic.DataManager.SupabaseKey!,new SupabaseOptions { AutoRefreshToken = true });
             }
-            catch
+            catch (Exception ex)
             {
-                Console.WriteLine("Couldn't create supabase client.");
+                Console.WriteLine($"[Error] Supabase Client: {ex.Message}");
                 Environment.Exit(1);
+            }
+        
+            string[] tablesSql = new[]
+            {
+                @"CREATE TABLE IF NOT EXISTS devices (
+                    udkey   TEXT PRIMARY KEY,
+                    gdkeys  JSONB NOT NULL DEFAULT '[]'
+                );",
+                @"CREATE TABLE IF NOT EXISTS accounts (
+                    gdkey                   TEXT PRIMARY KEY,
+                    character_id            TEXT NOT NULL DEFAULT '',
+                    user_id                 TEXT NOT NULL DEFAULT '',
+                    ywp_user_tables         JSONB NOT NULL DEFAULT '{}',
+                    last_lgn_time           TEXT NOT NULL DEFAULT '',
+                    start_date              BIGINT NOT NULL DEFAULT 0,
+                    opening_tutorial_flag   BOOLEAN NOT NULL DEFAULT FALSE
+                );"
+            };
+        
+            using (var httpClient = new HttpClient())
+            {
+                var url = $"{DataManager.Logic.DataManager.SupabaseURL.TrimEnd('/')}/rest/v1/rpc/exec_sql";
+                httpClient.DefaultRequestHeaders.Add("apikey", DataManager.Logic.DataManager.SupabaseKey);
+                httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {DataManager.Logic.DataManager.SupabaseKey}");
+                foreach (var sql in tablesSql)
+                {
+                    try
+                    {
+                        var payload = JsonConvert.SerializeObject(new { query = sql.Trim() });
+                        var content = new StringContent(payload, Encoding.UTF8, "application/json");
+                        var response = await httpClient.PostAsync(url, content);
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            var errorBody = await response.Content.ReadAsStringAsync();
+                            Console.WriteLine($"[SQL Error] {response.StatusCode}: {errorBody}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[Request Exception] {ex.Message}");
+                    }
+                }
             }
         }
 
@@ -145,3 +195,4 @@ namespace Puniemu.Src.UserDataManager.Logic
         }
     }
 }
+
