@@ -202,5 +202,37 @@ namespace Puniemu.Src.UserDataManager.Logic
             device.Gdkeys.Add(gdkey); 
             await device.Update<Device>();
         }
+        
+        public static async Task<string> AddExistingDevice(string deviceId)
+        {
+            try
+            {
+                var response = await UserDataManager.SupabaseClient!.From<Device>().Where(d => d.UdKey == deviceId).Get();
+                var device = response.Models.FirstOrDefault();
+                
+                if (device == null)
+                {
+                    var newDevice = new Device()
+                    {
+                        UdKey = deviceId,
+                        Gdkeys = new List<string>()
+                    };
+                    
+                    var insertResponse = await UserDataManager.SupabaseClient!.From<Device>().Insert(newDevice);
+                    var createdDevice = insertResponse.Models.First();
+                    
+                    return createdDevice.UdKey;
+                }
+                else
+                {
+                    return device.UdKey;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error ensuring device exists: {ex.Message}");
+                throw;
+            }
+        }
     }
 }
