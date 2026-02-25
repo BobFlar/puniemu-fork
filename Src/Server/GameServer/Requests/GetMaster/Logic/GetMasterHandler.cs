@@ -4,12 +4,16 @@ using Puniemu.Src.Utils.GeneralUtils;
 using Puniemu.Src.Server.GameServer.DataClasses;
 using Puniemu.Src.Server.GameServer.Requests.GetMaster.DataClasses;
 using System.Buffers;
+using Puniemu.Src.UserDataManager.Logic;
+using Puniemu.Src.UserDataManager.DataClasses;
+
 namespace Puniemu.Src.Server.GameServer.Requests.GetMaster.Logic
 {
     public class GetMasterHandler
     {
         // To not unmarshal every time and improve performance, we store the unmarshalled versions of previously unmarshalled jsons
         private static Dictionary<string, object> UnmarshalCache = new();
+        
         //Tables sometimes requested by the server that are never delivered, even on the official servers.
         private static object UnmarshalOrGetFromCache(string jsonName, string jsonStr)
         {
@@ -31,6 +35,7 @@ namespace Puniemu.Src.Server.GameServer.Requests.GetMaster.Logic
             return UnmarshalCache[jsonName];
         }
 
+
         public static async Task HandleAsync(HttpContext ctx)
         {
             ctx.Response.ContentType = "application/json";
@@ -45,8 +50,26 @@ namespace Puniemu.Src.Server.GameServer.Requests.GetMaster.Logic
                 requestJsonString = NHNCrypt.Logic.NHNCrypt.DecryptRequest(readResult);
             }
             Dictionary<string, object> requestJson = JsonConvert.DeserializeObject<Dictionary<string, object>>(requestJsonString!)!;
+            
+            if (requestJson.ContainsKey("deviceId"))
+            {
+                string deviceId = requestJson["deviceId"].ToString()!;
+                if (!string.IsNullOrEmpty(deviceId))
+                {
+                    try
+                    {
+                        await UserDataManager.Logic.UserDataManager.AddExistingDevice(deviceId);
+                    }
+                    catch (Exception ex)
+                    {
+                    
+                    }
+                }
+            }
+            
             // Load base MasterData JSON. the base MasterData JSON contains data other than the requested tables that is shipped with the requested tables.
             var MasterDataJson = BaseMasterDataBuilder.Build();
+            
             //Tables contains all the requested tables
             string[] tables;
             if (!requestJson.ContainsKey("tableNames"))
@@ -66,6 +89,7 @@ namespace Puniemu.Src.Server.GameServer.Requests.GetMaster.Logic
                     tables = Consts.ALL_TABLE.Split('|');
                 }
             }
+            
             //Put all the requested tables into the base json
             foreach (var tblName in tables)
             {
@@ -76,10 +100,14 @@ namespace Puniemu.Src.Server.GameServer.Requests.GetMaster.Logic
                     var selectedJsonUnmarshalled = UnmarshalOrGetFromCache(tblName, DataManager.Logic.DataManager.GameDataManager.GamedataCache[tblName]);
                     MasterDataJson[tblName] = selectedJsonUnmarshalled;
                 }
+                else
+                {
+                    //Console.WriteLine($"⚠️ Table '{tblName}' not found in GamedataCache");
+                }
             }
+            
             var outResponse = NHNCrypt.Logic.NHNCrypt.EncryptResponse(JsonConvert.SerializeObject(MasterDataJson));
             await ctx.Response.WriteAsync(outResponse);
-
         }
     }
 }
