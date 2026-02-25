@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Puniemu.Src.UserDataManager.DataClasses;
 using Supabase;
@@ -6,6 +6,7 @@ using System.Collections;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Text;
 using System.Net.Http;
+using System.Linq;
 
 namespace Puniemu.Src.UserDataManager.Logic
 {
@@ -19,7 +20,7 @@ namespace Puniemu.Src.UserDataManager.Logic
         public static Supabase.Client? SupabaseClient;
 
         //Check credentials and connect to the Firestore database.
-        /*
+       /*
            Run this on supabase:
            CREATE OR REPLACE FUNCTION exec_sql(query text)
            RETURNS void AS $$
@@ -50,16 +51,16 @@ namespace Puniemu.Src.UserDataManager.Logic
             {
                 @"CREATE TABLE IF NOT EXISTS device (
                     udkey   TEXT PRIMARY KEY,
-                    gdkeys  JSONB NULL DEFAULT '[]'
+                    gdkeys  JSONB DEFAULT '[]'
                 );",
                 @"CREATE TABLE IF NOT EXISTS account (
                     gdkey                   TEXT PRIMARY KEY,
-                    character_id            TEXT NULL DEFAULT '',
-                    user_id                 TEXT NULL DEFAULT '',
-                    ywp_user_tables         JSONB NULL DEFAULT '{}',
-                    last_lgn_time           TEXT NULL DEFAULT '',
-                    start_date              BIGINT NULL DEFAULT 0,
-                    opening_tutorial_flag   BOOLEAN NULL DEFAULT FALSE
+                    character_id            TEXT DEFAULT '',
+                    user_id                 TEXT DEFAULT '',
+                    ywp_user_tables         JSONB DEFAULT '{}',
+                    last_lgn_time           TEXT DEFAULT '',
+                    start_date              BIGINT DEFAULT 0,
+                    opening_tutorial_flag   BOOLEAN DEFAULT FALSE
                 );"
             };
         
@@ -89,6 +90,8 @@ namespace Puniemu.Src.UserDataManager.Logic
             }
         }
 
+
+
         // returns the udkey of the newly created device
         public static async Task<string> NewDeviceAsync()
         {
@@ -106,7 +109,7 @@ namespace Puniemu.Src.UserDataManager.Logic
         {
             var acc = new Account()
             {
-                Gdkey = Guid.NewGuid().ToString(),
+                Gdkey = "g-" + new string(Enumerable.Range(0, 20).Select(_ => "abcdefghijklmnopqrstuvwxyz0123456789"[Random.Shared.Next(36)]).ToArray()),
                 YwpUserTables = new(),
                 LastLoginTime = "",
                 CharacterId = ""
@@ -201,8 +204,3 @@ namespace Puniemu.Src.UserDataManager.Logic
         }
     }
 }
-
-
-
-
-
