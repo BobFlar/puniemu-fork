@@ -32,7 +32,13 @@ namespace Puniemu.Src.UserDataManager.Logic
         {
             try
             {
-                SupabaseClient = new Supabase.Client(DataManager.Logic.DataManager.SupabaseURL!, DataManager.Logic.DataManager.SupabaseKey!,new SupabaseOptions { AutoRefreshToken = true });
+                SupabaseClient = new Supabase.Client(
+                    DataManager.Logic.DataManager.SupabaseURL!,
+                    DataManager.Logic.DataManager.SupabaseKey!,
+                    new SupabaseOptions {
+                        AutoRefreshToken = true
+                    }
+                );
             }
             catch (Exception ex)
             {
@@ -44,16 +50,16 @@ namespace Puniemu.Src.UserDataManager.Logic
             {
                 @"CREATE TABLE IF NOT EXISTS device (
                     udkey   TEXT PRIMARY KEY,
-                    gdkeys  JSONB NOT NULL DEFAULT '[]'
+                    gdkeys  JSONB NULL DEFAULT '[]'
                 );",
                 @"CREATE TABLE IF NOT EXISTS account (
                     gdkey                   TEXT PRIMARY KEY,
-                    character_id            TEXT NOT NULL DEFAULT '',
-                    user_id                 TEXT NOT NULL DEFAULT '',
-                    ywp_user_tables         JSONB NOT NULL DEFAULT '{}',
-                    last_lgn_time           TEXT NOT NULL DEFAULT '',
-                    start_date              TEXT NOT NULL DEFAULT 0,
-                    opening_tutorial_flag   BOOLEAN NOT NULL DEFAULT FALSE
+                    character_id            TEXT NULL DEFAULT '',
+                    user_id                 TEXT NULL DEFAULT '',
+                    ywp_user_tables         JSONB NULL DEFAULT '{}',
+                    last_lgn_time           TEXT NULL DEFAULT '',
+                    start_date              BIGINT NULL DEFAULT 0,
+                    opening_tutorial_flag   BOOLEAN NULL DEFAULT FALSE
                 );"
             };
         
@@ -195,6 +201,7 @@ namespace Puniemu.Src.UserDataManager.Logic
         }
     }
 }
+
 
 
 
