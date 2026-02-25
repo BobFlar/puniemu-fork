@@ -52,7 +52,7 @@ namespace Puniemu.Src.UserDataManager.Logic
                     user_id                 TEXT NOT NULL DEFAULT '',
                     ywp_user_tables         JSONB NOT NULL DEFAULT '{}',
                     last_lgn_time           TEXT NOT NULL DEFAULT '',
-                    start_date              BIGINT NOT NULL DEFAULT 0,
+                    start_date              TEXT NOT NULL DEFAULT 0,
                     opening_tutorial_flag   BOOLEAN NOT NULL DEFAULT FALSE
                 );"
             };
@@ -195,6 +195,7 @@ namespace Puniemu.Src.UserDataManager.Logic
         }
     }
 }
+
 
 
 
