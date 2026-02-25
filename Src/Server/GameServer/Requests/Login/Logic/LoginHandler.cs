@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Puniemu.Src.Server.GameServer.DataClasses;
+using Puniemu.Src.Server.GameServer.Logic;
 using Puniemu.Src.Server.GameServer.Requests.Login.DataClasses;
 using Puniemu.Src.UserDataManager.DataClasses;
 using Puniemu.Src.UserDataManager.Logic;
@@ -27,7 +28,7 @@ namespace Puniemu.Src.Server.GameServer.Requests.Login.Logic
             //Construct response
             var res = new LoginResponse();
             //Get the user tables
-            var resdict = await res.ToDictionary(deserialized!.Gdkey!);            
+            var resdict = await res.ToDictionary(deserialized!.Gdkey!);
             await GeneralUtils.AddTablesToResponse(Consts.LOGIN_TABLES,resdict,true,deserialized!.Gdkey!);
             //Set last login time to now
             acc.LastLoginTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
@@ -35,7 +36,8 @@ namespace Puniemu.Src.Server.GameServer.Requests.Login.Logic
             var encryptedRes = NHNCrypt.Logic.NHNCrypt.EncryptResponse(JsonConvert.SerializeObject(resdict));
             ctx.Response.Headers.ContentType = "application/json";
             await ctx.Response.WriteAsync(encryptedRes);
-
+            GenerateFriendData.RefreshYwpUserFriend(deserialized.Gdkey!, -1, -1, "", -1, acc.LastLoginTime);
         }
     }
 }
+
