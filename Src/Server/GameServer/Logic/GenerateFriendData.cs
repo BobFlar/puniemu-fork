@@ -52,7 +52,7 @@ namespace Puniemu.Src.Server.GameServer.Logic
             else if (diff.TotalHours >= 1)
             {
                 int hours = (int)diff.TotalHours;
-                return hours > 1 ? $"{hours} Hours" : $"{hours} Hour";
+                return hours > 1 ? $"{hours} Hrs" : $"{hours} Hour";
             }
             else
             {
@@ -138,3 +138,4 @@ namespace Puniemu.Src.Server.GameServer.Logic
         }
     }
 }
+
