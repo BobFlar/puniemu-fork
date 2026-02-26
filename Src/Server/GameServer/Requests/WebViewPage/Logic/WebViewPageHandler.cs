@@ -9,9 +9,8 @@ namespace Puniemu.Src.Server.GameServer.Requests.WebViewPage.Logic
         public static async Task HandleAsync(HttpContext ctx)
         {
             string webviewId = ctx.Request.Query["webviewId"].ToString();
-            // pageNo is not yet supported
             string pageNo = ctx.Request.Query["pageNo"].ToString();
-
+            
             if (string.IsNullOrEmpty(webviewId))
             {
                 ctx.Response.StatusCode = 200;
@@ -19,10 +18,22 @@ namespace Puniemu.Src.Server.GameServer.Requests.WebViewPage.Logic
                 return;
             }
             string folderPath = Path.Combine(Directory.GetCurrentDirectory(), "Web", "Page", webviewId);
-            string filePath = Path.Combine(folderPath, "viewpage.html");
-
+            
+            string fileName;
+            if (string.IsNullOrEmpty(pageNo) || pageNo == "1")
+            {
+                fileName = "viewpage.html";
+            }
+            else
+            {
+                fileName = $"viewpage{pageNo}.html";
+            }
+            
+            string filePath = Path.Combine(folderPath, fileName);
+            
+            
             ctx.Response.ContentType = "text/html; charset=utf-8";
-
+            
             if (!Directory.Exists(folderPath))
             {
                 ctx.Response.StatusCode = 200;
@@ -37,7 +48,7 @@ namespace Puniemu.Src.Server.GameServer.Requests.WebViewPage.Logic
             else
             {
                 ctx.Response.StatusCode = 200;
-                await ctx.Response.WriteAsync("This page was not found, please check that the file name is \"viewpage.html\"");
+                await ctx.Response.WriteAsync($"This page was not found, please check that the file name is: <b>{fileName}</b>");
             }
         }
     }
