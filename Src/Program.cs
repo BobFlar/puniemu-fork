@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Rewrite;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
 using Puniemu.Src.Server.GameServer.Requests.DefaultHandler.Logic;
 using Puniemu.Src.Server.GameServer.Requests.GetL5IDStatus.Logic;
 using Puniemu.Src.Server.GameServer.Requests.CreateUser.Logic;
@@ -37,6 +39,8 @@ using Puniemu.Src.Server.GameServer.Requests.InitCrystal.Logic;
 using Puniemu.Src.Server.GameServer.Requests.UpdateCrystalMenu.Logic;
 using Puniemu.Src.Server.GameServer.Requests.FriendDelete.Logic;
 using Puniemu.Src.Server.GameServer.Requests.GetPresentBox.Logic;
+using Puniemu.Src.Server.GameServer.Requests.WebNoticeBannerPage.Logic;
+using Puniemu.Src.Server.GameServer.Requests.WebViewPage.Logic;
 
 
 using Puniemu.Src.Utils.GeneralUtils;
@@ -54,6 +58,14 @@ class Program
         DataManager.Logic.DataManager.StaticInit(builder.Configuration);
 
         var app = builder.Build();
+        
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(Path.Combine(app.Environment.ContentRootPath, "Web")),
+            RequestPath = "/Web"
+        });
+
+
         //Rewrite to redirect mainly all .NHN requests to .NHN/, as ASP.NET Core thinks it's static serving otherwise or something
         //second rewrite is in case it's for example /////////////////////init.nhn it makes it /init.nhn
         var rewriteOptions = new RewriteOptions()
@@ -89,6 +101,14 @@ class Program
 
     static void AssignGameServerHandlers(WebApplication app)
     {
+        app.MapGet("/web/noticeBannerPage.nhn", async ctx =>
+        {
+            await WebNoticeBannerPageHandler.HandleAsync(ctx);
+        });
+        app.MapGet("/web/viewpage.nhn", async ctx =>
+        {
+            await WebViewPageHandler.HandleAsync(ctx);
+        });
         app.MapPost("/init.nhn", async ctx =>
         {
             await InitHandler.HandleAsync(ctx);
