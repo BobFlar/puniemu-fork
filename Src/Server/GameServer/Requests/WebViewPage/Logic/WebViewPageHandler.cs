@@ -9,6 +9,8 @@ namespace Puniemu.Src.Server.GameServer.Requests.WebViewPage.Logic
         public static async Task HandleAsync(HttpContext ctx)
         {
             string webviewId = ctx.Request.Query["webviewId"].ToString();
+            // pageNo is not yet supported
+            string pageNo = ctx.Request.Query["pageNo"].ToString();
 
             if (string.IsNullOrEmpty(webviewId))
             {
@@ -24,7 +26,7 @@ namespace Puniemu.Src.Server.GameServer.Requests.WebViewPage.Logic
             if (!Directory.Exists(folderPath))
             {
                 ctx.Response.StatusCode = 200;
-                await ctx.Response.WriteAsync("This page doesn't exist");
+                await ctx.Response.WriteAsync($"This page doesn't exist: <br><b>{webviewId}</b>");
                 return;
             }
             
